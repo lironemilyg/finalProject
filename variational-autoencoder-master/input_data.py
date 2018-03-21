@@ -3,7 +3,24 @@ import gzip
 import os
 import urllib.request as urllib
 import numpy
+import tensorflow as tf
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
+
+
+def new_dataset():
+    image_orig = tf.image.decode_bmp("/Users/lirongazit/Documents/outputcropDataset")
+    image = tf.image.resize_images(image_orig, [28, 28])
+    image.set_shape((28, 28, 3))
+    batch_size = 1000
+    num_preprocess_threads = 1
+    min_queue_examples = 256
+    images = tf.train.shuffle_batch(
+        [image],
+        batch_size=batch_size,
+        num_threads=num_preprocess_threads,
+        capacity=min_queue_examples + 3 * batch_size,
+        min_after_dequeue=min_queue_examples)
+    return images
 
 
 def maybe_download(filename, work_directory):
@@ -135,6 +152,7 @@ def read_data_sets(train_dir, one_hot=False):
     class DataSets(object):
         pass
     data_sets = DataSets()
+    # OUR_IMAGES = new_dataset()
     TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
     TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
     TEST_IMAGES = 't10k-images-idx3-ubyte.gz'
@@ -143,8 +161,9 @@ def read_data_sets(train_dir, one_hot=False):
     train_images = extract_images(local_file)
     local_file = maybe_download(TRAIN_LABELS, train_dir)
     train_labels = extract_labels(local_file, one_hot=one_hot)
-    # ind = train_labels[:,6]==1
+    # ind = train_labels[:,7] == 1
     # train_images = train_images[ind]
+    # train_labels = train_labels[ind]
     local_file = maybe_download(TEST_IMAGES, train_dir)
     test_images = extract_images(local_file)
     local_file = maybe_download(TEST_LABELS, train_dir)
