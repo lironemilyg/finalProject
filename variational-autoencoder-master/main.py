@@ -64,11 +64,11 @@ class LatentAttention():
         with tf.Session() as sess:
             sess.run(tf.initialize_all_variables())
             num_of_steps = 3000
-            try:
-                saver.restore(sess, tf.train.latest_checkpoint('training/'))
-                num_of_steps = 5
-            except:
-                pass
+            # try:
+            #     saver.restore(sess, tf.train.latest_checkpoint('training/'))
+            #     num_of_steps = 5
+            # except:
+            #     pass
             for epoch in range(num_of_steps):
                 for idx in range(int(self.n_samples / self.batchsize)):
                     batch = self.mnist.train.next_batch(self.batchsize)[0]
