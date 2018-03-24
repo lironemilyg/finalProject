@@ -3,7 +3,7 @@ from PIL import Image
 from array import *
 from random import shuffle
 
-OUTPATH = r"/Users/lirongazit/Documents/outputcropDataset"
+OUTPATH = r"/Users/lirongazit/Documents/outcropDataset"
 
 # Load from and save to
 Names = [[OUTPATH, 'train']]
@@ -35,7 +35,9 @@ for name in Names:
         for x in range(0, width):
             for y in range(0, height):
                 a = pixel[y, x]
-                data_image.extend(list(pixel[y, x]))
+                data_image.append(pixel[y, x][0])
+                #data_image.append(pixel[y, x][1])
+                #data_image.append(pixel[y, x][2])
 
         data_label.append(label)  # labels start (one unsigned byte each)
 

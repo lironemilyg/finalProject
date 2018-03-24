@@ -3,11 +3,11 @@ from PIL import Image
 import numpy as np
 
 INPATH = r"/Users/lirongazit/Documents/dataset"
-OUTPATH = r"/Users/lirongazit/Documents/outputcropDataset"
+OUTPATH = r"/Users/lirongazit/Documents/outcropDataset"
 
-dx = dy = 28
+dx = dy = 100
 tilesPerImage = 100
-'''
+
 files = os.listdir(INPATH)
 numOfImages = len(files)
 
@@ -23,7 +23,7 @@ for file in files:
          .save(os.path.join(OUTPATH, newname))
 
 print("Done {}".format(numOfImages))
-'''
+
 files = os.listdir(OUTPATH)
 
 for file in files:
