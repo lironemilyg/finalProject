@@ -6,23 +6,6 @@ import numpy
 import tensorflow as tf
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 
-
-def new_dataset():
-    image_orig = tf.image.decode_bmp("/Users/lirongazit/Documents/outputcropDataset")
-    image = tf.image.resize_images(image_orig, [28, 28])
-    image.set_shape((28, 28, 3))
-    batch_size = 1000
-    num_preprocess_threads = 1
-    min_queue_examples = 256
-    images = tf.train.shuffle_batch(
-        [image],
-        batch_size=batch_size,
-        num_threads=num_preprocess_threads,
-        capacity=min_queue_examples + 3 * batch_size,
-        min_after_dequeue=min_queue_examples)
-    return images
-
-
 def maybe_download(filename, work_directory):
     """Download the data from Yann's website, unless it's already here."""
     if not os.path.exists(work_directory):
@@ -126,7 +109,7 @@ class DataSet(object):
     def next_batch(self, batch_size, fake_data=False):
         """Return the next `batch_size` examples from this data set."""
         if fake_data:
-            fake_image = [1.0 for _ in range(784)]
+            fake_image = [1.0 for _ in range(16384)]
             fake_label = 0
             return [fake_image for _ in range(batch_size)], [
                 fake_label for _ in range(batch_size)]
@@ -152,7 +135,6 @@ def read_data_sets(train_dir, one_hot=False):
     class DataSets(object):
         pass
     data_sets = DataSets()
-    # OUR_IMAGES = new_dataset()
     TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
     TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
     TEST_IMAGES = 't10k-images-idx3-ubyte.gz'
