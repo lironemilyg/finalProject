@@ -38,7 +38,7 @@ class LatentAttention():
             h1 = lrelu(conv2d(input_images, 1, 16, "d_h1")) # 128x128x1 -> 64x64x16
             h2 = lrelu(conv2d(h1, 16, 32, "d_h2")) # 64x64x16 -> 32x32x32
             h3 = lrelu(conv2d(h2, 32, 64, "d_h3")) # 32x32x32 -> 16x16x64
-            h3_flat = tf.reshape(h3,[self.batchsize, 16*16*64])
+            h3_flat = tf.reshape(h3, [self.batchsize, 16*16*64])
 
             w_mean = dense(h3_flat, 16*16*64, self.n_z, "w_mean")
             w_stddev = dense(h3_flat, 16*16*64, self.n_z, "w_stddev")
