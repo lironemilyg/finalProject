@@ -11,7 +11,7 @@ class LatentAttention():
         self.path = r'/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/dataset'
         self.IsImgsGrey = True #grey or RGB
         self.ImgSize = 64
-        self.num_of_steps = 100000
+        self.num_of_steps = 150000
         self.factor = 1
 
         self.Imgs = ReadImgs(self.path,self.IsImgsGrey)
@@ -25,19 +25,15 @@ class LatentAttention():
         else:
             self.images = tf.placeholder(tf.float32, [self.batchsize, self.ImgSize, self.ImgSize, 3])
 
-        z_mean, z_stddev = self.recognition(self.images)
-        samples = tf.random_normal([self.batchsize,self.n_z],0,1,dtype=tf.float32)
-        # guessed_z = z_mean + (z_stddev * samples)
-        guessed_z = z_mean
+        z_mean = self.recognition(self.images)
 
-        self.generated_images = self.generation(guessed_z)
+        self.generated_images = self.generation(z_mean)
 
         self.generation_loss = tf.reduce_sum((self.images-self.generated_images)**2)
         # self.generation_loss = -tf.reduce_sum(self.images * tf.log(1e-8 + self.generated_images) + (1-self.images) * tf.log(1e-8 + 1 - self.generated_images),1)
 
-        self.latent_loss = 0 * tf.reduce_sum(tf.square(z_mean) + tf.square(z_stddev) - tf.log(tf.square(z_stddev)) - 1,1)
-        # self.latent_loss = 0.5 * tf.reduce_sum(tf.square(z_mean) + tf.square(z_stddev) - tf.log(tf.square(z_stddev)) - 1,1)
-        self.cost = tf.reduce_mean(self.generation_loss + self.latent_loss)
+
+        self.cost = tf.reduce_mean(self.generation_loss)
         # self.cost = tf.reduce_mean(self.generation_loss)
         self.optimizer = tf.train.AdamOptimizer(0.0001).minimize(self.cost)
 
@@ -52,9 +48,8 @@ class LatentAttention():
             h4_flat = tf.reshape(h4, [self.batchsize, -1])
 
             w_mean = dense(h4_flat, h4_flat.shape[1].value, self.n_z, "w_mean")
-            w_stddev = dense(h4_flat, h4_flat.shape[1].value, self.n_z, "w_stddev")
 
-        return w_mean, w_stddev
+        return w_mean
 
     # decoder
     def generation(self, z):
@@ -82,11 +77,11 @@ class LatentAttention():
             #     pass
             for step in range(self.num_of_steps):
                 batch = NextBatch(self.Imgs,self.ImgSize,self.batchsize)
-                _, gen_loss, lat_loss = sess.run((self.optimizer, self.generation_loss, self.latent_loss),
+                _, gen_loss = sess.run((self.optimizer, self.generation_loss),
                                                  feed_dict={self.images: batch})
                 # dumb hack to print cost every epoch
                 if step % 100 == 0:
-                    print("step %d: genloss %f latloss %f" % (step, np.mean(gen_loss), np.mean(lat_loss)))
+                    print("step %d: genloss %f" % (step, np.mean(gen_loss)))
                     generated_test = sess.run(self.generated_images, feed_dict={self.images: visualization})
                     ims("results/" + str(step) + ".jpg", merge(generated_test[:49], [7, 7]))
                 if step % 5000 == 0:
