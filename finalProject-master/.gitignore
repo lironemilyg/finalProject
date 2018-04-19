@@ -1,0 +1,3 @@
+venvv
+venvv/lib/python3.6/*
+!.gitignore
