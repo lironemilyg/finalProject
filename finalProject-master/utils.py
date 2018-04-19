@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-import os
+import os, random
 from PIL import Image
 
 def merge(images, size):
@@ -27,11 +27,20 @@ def NextBatch(Imgs,ImgSize,batch_size):
     idxs = np.random.permutation(np.arange(0,NumImgs))[:batch_size]
     batch = []
     for idx in idxs:
-        img = Imgs[idx]
-        h = img.shape[0]
-        w = img.shape[1]
-        p1 = np.random.randint(0,h-ImgSize)
-        p2 = np.random.randint(0,w-ImgSize)
-        batch.append(img[p1:p1+ImgSize,p2:p2+ImgSize,:])
-    return np.stack(batch,0)/255.
+        while True:
+            try:
+                img = Imgs[idx]
+                h = img.shape[0] - ImgSize
+                w = img.shape[1] - ImgSize
+                if h > 0 and w > 0:
+                    p1 = random.randint(0, h)
+                    p2 = random.randint(0, w)
+                    batch.append(img[p1:p1+ImgSize, p2:p2+ImgSize, :])
+                    break
+                else:
+                    idx = np.random.randint(0, NumImgs)
+            except:
+                idx = np.random.randint(0, NumImgs)
+
+    return np.stack(batch, 0)/255.
 
