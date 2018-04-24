@@ -5,7 +5,7 @@ import os
 from scipy.misc import imsave as ims
 from utils import *
 from ops import *
-
+import logging
 class LatentAttention():
     def __init__(self):
         self.path = r'/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/dataset'
@@ -15,6 +15,7 @@ class LatentAttention():
         self.factor = 1
 
         self.Imgs = ReadImgs(self.path,self.IsImgsGrey)
+        self.Imgs1,self.labels = ReadImgs1(self.path,self.IsImgsGrey)
         self.n_samples = self.Imgs.__len__()
 
         self.n_z = 100
@@ -24,18 +25,32 @@ class LatentAttention():
             self.images = tf.placeholder(tf.float32, [self.batchsize, self.ImgSize, self.ImgSize, 1])
         else:
             self.images = tf.placeholder(tf.float32, [self.batchsize, self.ImgSize, self.ImgSize, 3])
+        self.tf_labels = tf.placeholder(tf.float32, [self.batchsize])
 
         z_mean = self.recognition(self.images)
+
+        self.estimated_class = tf.squeeze(self.classifier_net(z_mean))
 
         self.generated_images = self.generation(z_mean)
 
         self.generation_loss = tf.reduce_sum((self.images-self.generated_images)**2)
+
+        self.classifier_lost = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.tf_labels, logits=self.estimated_class)
         # self.generation_loss = -tf.reduce_sum(self.images * tf.log(1e-8 + self.generated_images) + (1-self.images) * tf.log(1e-8 + 1 - self.generated_images),1)
 
 
-        self.cost = tf.reduce_mean(self.generation_loss)
+        self.Loss1 = tf.reduce_mean(self.generation_loss)
+        self.Loss2 = tf.reduce_mean(self.classifier_lost)
         # self.cost = tf.reduce_mean(self.generation_loss)
-        self.optimizer = tf.train.AdamOptimizer(0.0001).minimize(self.cost)
+
+        t_vars = tf.trainable_variables()
+        self.e_vars = [var for var in t_vars if 'recognition' in var.name]
+        self.d_vars = [var for var in t_vars if 'generation' in var.name]
+        self.c_vars = [var for var in t_vars if 'classifier_net' in var.name]
+
+
+        self.optimizer = tf.train.AdamOptimizer(0.0001).minimize(self.Loss1,var_list=[self.e_vars+self.d_vars])
+        self.optimizer2 = tf.train.AdamOptimizer(0.0001).minimize(self.Loss2,var_list=[self.c_vars])
 
 
     # encoder
@@ -49,6 +64,13 @@ class LatentAttention():
             h5_flat = tf.reshape(h5, [self.batchsize, -1])
 
             w_mean = dense(h5_flat, h5_flat.shape[1].value, self.n_z, "w_mean")
+
+        return w_mean
+
+
+    def classifier_net(self, z):
+        with tf.variable_scope("classifier_net"):
+            w_mean = dense(z, self.n_z, 1, "classifier")
 
         return w_mean
 
@@ -76,6 +98,7 @@ class LatentAttention():
 
     def train(self):
         visualization = NextBatch(self.Imgs,self.ImgSize, self.batchsize)
+        batchVis, labelsVis = NextBatch1(self.Imgs1, self.labels, self.ImgSize, self.batchsize)
         ims('./results/base.jpg',merge(visualization[:49],[7,7]))
         # train
         saver = tf.train.Saver(max_to_keep=2)
@@ -87,14 +110,19 @@ class LatentAttention():
             # except:
             #     pass
             for step in range(self.num_of_steps):
+                batch1, labels = NextBatch1(self.Imgs1,self.labels,self.ImgSize,self.batchsize)
                 batch = NextBatch(self.Imgs,self.ImgSize,self.batchsize)
                 _, gen_loss = sess.run((self.optimizer, self.generation_loss),
-                                                 feed_dict={self.images: batch})
+                                       feed_dict={self.images: batch})
+                _, class_loss = sess.run((self.optimizer2, self.classifier_lost),
+                                         feed_dict={self.images: batch1,self.tf_labels:labels})
                 # dumb hack to print cost every epoch
                 if step % 100 == 0:
-                    print("step %d: genloss %f" % (step, np.mean(gen_loss)))
+                    print("step %d: genloss %f classifier loss %f" % (step, np.mean(gen_loss), np.mean(class_loss)))
                     generated_test = sess.run(self.generated_images, feed_dict={self.images: visualization})
                     ims("results/" + str(step) + ".jpg", merge(generated_test[:49], [7, 7]))
+                    classification_test = sess.run(self.estimated_class, feed_dict={self.images: batchVis, self.tf_labels: labelsVis})
+                    #logging.info()
                 if step % 5000 == 0:
                     saver.save(sess, os.getcwd() + "/training/train", global_step=step)
                 if step == 149900:
@@ -104,6 +132,6 @@ class LatentAttention():
 
 
 
-
+logging.basicConfig(filename=r'results/classifier_results.log',level=logging.DEBUG)
 model = LatentAttention()
 model.train()

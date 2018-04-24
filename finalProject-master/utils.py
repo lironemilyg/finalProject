@@ -14,6 +14,7 @@ def merge(images, size):
 
     return img
 
+
 def ReadImgs(path,GreyFlag):
     files = os.listdir(path)
     if GreyFlag:
@@ -21,6 +22,16 @@ def ReadImgs(path,GreyFlag):
     else:
         Imgs = [np.asarray(Image.open(os.path.join(path, file))) for file in files]
     return Imgs
+
+
+def ReadImgs1(path,GreyFlag):
+    files = os.listdir(path)
+    if GreyFlag:
+        Imgs = [np.asarray(Image.open(os.path.join(path, file)))[:,:,:1] for file in files]
+    else:
+        Imgs = [np.asarray(Image.open(os.path.join(path, file))) for file in files]
+    Labels = [int(file.split('.')[1].split('_')[0]) for file in files]
+    return Imgs, Labels
 
 def NextBatch(Imgs,ImgSize,batch_size):
     NumImgs = Imgs.__len__()
@@ -44,3 +55,25 @@ def NextBatch(Imgs,ImgSize,batch_size):
 
     return np.stack(batch, 0)/255.
 
+def NextBatch1(Imgs,labels,ImgSize,batch_size):
+    NumImgs = Imgs.__len__()
+    idxs = np.random.permutation(np.arange(0,NumImgs))[:batch_size]
+    batchLable = []
+    batch = []
+    for idx in idxs:
+        while True:
+            try:
+                img = Imgs[idx]
+                h = img.shape[0] - ImgSize
+                w = img.shape[1] - ImgSize
+                if h > 0 and w > 0:
+                    p1 = random.randint(0, h)
+                    p2 = random.randint(0, w)
+                    batch.append(img[p1:p1+ImgSize, p2:p2+ImgSize, :])
+                    batchLable.append(labels[idx])
+                    break
+                else:
+                    idx = np.random.randint(0, NumImgs)
+            except:
+                idx = np.random.randint(0, NumImgs)
+    return np.stack(batch, 0)/255., np.array(batchLable)
