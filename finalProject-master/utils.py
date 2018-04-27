@@ -27,10 +27,10 @@ def ReadImgs(path,GreyFlag):
 def ReadImgs1(path,GreyFlag):
     files = os.listdir(path)
     if GreyFlag:
-        Imgs = [np.asarray(Image.open(os.path.join(path, file)))[:,:,:1] for file in files]
+        Imgs = [np.asarray(Image.open(os.path.join(path, file)))[:,:,:1] for file in files if file != ".DS_Store"]
     else:
-        Imgs = [np.asarray(Image.open(os.path.join(path, file))) for file in files]
-    Labels = [int(file.split('.')[1].split('_')[0]) for file in files]
+        Imgs = [np.asarray(Image.open(os.path.join(path, file))) for file in files if file != ".DS_Store"]
+    Labels = [int(file.split('.')[1].split('_')[0]) for file in files if file != ".DS_Store"]
     return Imgs, Labels
 
 def NextBatch(Imgs,ImgSize,batch_size):
@@ -61,19 +61,6 @@ def NextBatch1(Imgs,labels,ImgSize,batch_size):
     batchLable = []
     batch = []
     for idx in idxs:
-        while True:
-            try:
-                img = Imgs[idx]
-                h = img.shape[0] - ImgSize
-                w = img.shape[1] - ImgSize
-                if h > 0 and w > 0:
-                    p1 = random.randint(0, h)
-                    p2 = random.randint(0, w)
-                    batch.append(img[p1:p1+ImgSize, p2:p2+ImgSize, :])
-                    batchLable.append(labels[idx])
-                    break
-                else:
-                    idx = np.random.randint(0, NumImgs)
-            except:
-                idx = np.random.randint(0, NumImgs)
+        batch.append(Imgs[idx])
+        batchLable.append(labels[idx])
     return np.stack(batch, 0)/255., np.array(batchLable)

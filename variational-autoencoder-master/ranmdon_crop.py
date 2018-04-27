@@ -2,8 +2,8 @@ import random, os
 from PIL import Image
 import numpy as np
 
-INPATH = r"/Users/lirongazit/Documents/dataset"
-OUTPATH = r"/Users/lirongazit/Documents/outcropDataset"
+INPATH = r"/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/dataset"
+OUTPATH = r"/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/outcropDataset"
 
 dx = dy = 128
 tilesPerImage = 100
@@ -12,10 +12,13 @@ files = os.listdir(INPATH)
 numOfImages = len(files)
 
 for file in files:
+   if file == ".DS_Store":
+    continue
    with Image.open(os.path.join(INPATH, file)) as im:
      for i in range(1, tilesPerImage+1):
        try:
-         newname = file.replace('.', '_{:03d}.'.format(i))
+         newname = file.split('.')[0]+'_'+str(i)+'.'+'.'.join(file.split(".")[1:])
+         #newname = file.replace('.', '_{:03d}.'.format(i))
          w, h = im.size
          x = random.randint(0, w-dx-1)
          y = random.randint(0, h-dy-1)
@@ -28,7 +31,7 @@ for file in files:
 print("Done {}".format(numOfImages))
 
 files = os.listdir(OUTPATH)
-
+'''
 for file in files:
 
   im = Image.open(r"/Users/lirongazit/Documents/outputcropDataset/"+file)
@@ -42,7 +45,7 @@ for file in files:
   out = np.array(list(label),np.uint8)
   out.tofile(r"/Users/lirongazit/Documents/outimage.gz")
   out.tofile(r"/Users/lirongazit/Documents/oulabel.gz")
-
+'''
 
 #out.tofile(r"/Users/lirongazit/Documents/out.bin")
 

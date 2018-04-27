@@ -9,13 +9,14 @@ import logging
 class LatentAttention():
     def __init__(self):
         self.path = r'/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/dataset'
+        self.Croppedpath = r'/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/outCropDataset'
         self.IsImgsGrey = True #grey or RGB
         self.ImgSize = 128
         self.num_of_steps = 150000
         self.factor = 1
 
         self.Imgs = ReadImgs(self.path,self.IsImgsGrey)
-        self.Imgs1,self.labels = ReadImgs1(self.path,self.IsImgsGrey)
+        self.Imgs1,self.labels = ReadImgs1(self.Croppedpath,self.IsImgsGrey)
         self.n_samples = self.Imgs.__len__()
 
         self.n_z = 100
@@ -121,8 +122,12 @@ class LatentAttention():
                     print("step %d: genloss %f classifier loss %f" % (step, np.mean(gen_loss), np.mean(class_loss)))
                     generated_test = sess.run(self.generated_images, feed_dict={self.images: visualization})
                     ims("results/" + str(step) + ".jpg", merge(generated_test[:49], [7, 7]))
-                    classification_test = sess.run(self.estimated_class, feed_dict={self.images: batchVis, self.tf_labels: labelsVis})
-                    #logging.info()
+                    classification_test = sess.run(tf.nn.sigmoid(self.estimated_class), feed_dict={self.images: batchVis, self.tf_labels: labelsVis})
+                    diff = [(labelsVis[i], classification_test[i],labelsVis[i] - classification_test[i]) for i in range (self.batchsize)]
+                    logging.info('step is {d}'.format(d=step))
+                    for tup in diff:
+                        logging.info('\t' + str(tup))
+                    logging.info('##########################################################')
                 if step % 5000 == 0:
                     saver.save(sess, os.getcwd() + "/training/train", global_step=step)
                 if step == 149900:
@@ -130,8 +135,7 @@ class LatentAttention():
                     self.save_diff(14, sess, batch)
 
 
-
-
-logging.basicConfig(filename=r'results/classifier_results.log',level=logging.DEBUG)
+os.remove(r'results/classifier_results.log')
+logging.basicConfig(filename=r'results/classifier_results.log', level=logging.DEBUG)
 model = LatentAttention()
 model.train()
