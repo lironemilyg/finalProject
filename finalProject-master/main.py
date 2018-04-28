@@ -9,8 +9,8 @@ import logging
 class LatentAttention():
     def __init__(self):
         self.path = r'./dataset'
-        self.Croppedpath = r'./outCropDataset'
-        self.testPath = r'./test'
+        self.Croppedpath = r'./trainImages'
+        self.testPath = r'./testImages'
         self.IsImgsGrey = True #grey or RGB
         self.ImgSize = 128
         self.num_of_steps = 150000
