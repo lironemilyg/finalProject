@@ -64,3 +64,12 @@ def NextBatch1(Imgs,labels,ImgSize,batch_size):
         batch.append(Imgs[idx])
         batchLable.append(labels[idx])
     return np.stack(batch, 0)/255., np.array(batchLable)
+
+def testBatch(Imgs,labels,ImgSize,batch_size):
+    NumImgs = Imgs.__len__()
+    batchLable = []
+    batch = []
+    for idx in range(NumImgs):
+        batch.append(Imgs[idx])
+        batchLable.append(labels[idx])
+    return np.stack(batch, 0)/255., np.array(batchLable)

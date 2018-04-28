@@ -8,8 +8,9 @@ from ops import *
 import logging
 class LatentAttention():
     def __init__(self):
-        self.path = r'/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/dataset'
-        self.Croppedpath = r'/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/outCropDataset'
+        self.path = r'./dataset'
+        self.Croppedpath = r'./outCropDataset'
+        self.testPath = r'./test'
         self.IsImgsGrey = True #grey or RGB
         self.ImgSize = 128
         self.num_of_steps = 150000
@@ -17,6 +18,7 @@ class LatentAttention():
 
         self.Imgs = ReadImgs(self.path,self.IsImgsGrey)
         self.Imgs1,self.labels = ReadImgs1(self.Croppedpath,self.IsImgsGrey)
+        self.ImgsTest, self.labelsTest = ReadImgs1(self.testPath, self.IsImgsGrey)
         self.n_samples = self.Imgs.__len__()
 
         self.n_z = 100
@@ -98,8 +100,8 @@ class LatentAttention():
         fig.savefig('149900_{i}_fig.jpg'.format(i=i))
 
     def train(self):
-        visualization = NextBatch(self.Imgs,self.ImgSize, self.batchsize)
-        batchVis, labelsVis = NextBatch1(self.Imgs1, self.labels, self.ImgSize, self.batchsize)
+        visualization, _ = testBatch(self.ImgsTest, self.labelsTest, self.ImgSize, self.batchsize)
+        batchVis, labelsVis = testBatch(self.ImgsTest, self.labelsTest, self.ImgSize, self.batchsize)
         ims('./results/base.jpg',merge(visualization[:49],[7,7]))
         # train
         saver = tf.train.Saver(max_to_keep=2)
@@ -135,7 +137,10 @@ class LatentAttention():
                     self.save_diff(14, sess, batch)
 
 
-os.remove(r'results/classifier_results.log')
+try:
+    os.remove(r'results/classifier_results.log')
+except:
+    pass
 logging.basicConfig(filename=r'results/classifier_results.log', level=logging.DEBUG)
 model = LatentAttention()
 model.train()

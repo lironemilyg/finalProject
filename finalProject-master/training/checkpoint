@@ -1,3 +1,2 @@
-model_checkpoint_path: "/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/training/train-65000"
-all_model_checkpoint_paths: "/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/training/train-60000"
-all_model_checkpoint_paths: "/Users/lirongazit/Documents/finalProject/finalProject/finalProject-master/training/train-65000"
+model_checkpoint_path: "C:\\Users\\dalt\\Documents\\school\\finalProject\\finalProject-master/training/train-0"
+all_model_checkpoint_paths: "C:\\Users\\dalt\\Documents\\school\\finalProject\\finalProject-master/training/train-0"
