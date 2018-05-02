@@ -6,6 +6,8 @@ from scipy.misc import imsave as ims
 from utils import *
 from ops import *
 import logging
+
+
 class LatentAttention():
     def __init__(self):
         self.path = r'./dataset'
@@ -29,8 +31,10 @@ class LatentAttention():
         else:
             self.images = tf.placeholder(tf.float32, [self.batchsize, self.ImgSize, self.ImgSize, 3])
         self.tf_labels = tf.placeholder(tf.float32, [self.batchsize])
+        self.is_training = tf.placeholder(tf.bool, name='is_training')
 
         z_mean = self.recognition(self.images)
+        z_mean = tf.layers.batch_normalization(z_mean, training=self.is_training, trainable=False)
 
         self.estimated_class = tf.squeeze(self.classifier_net(z_mean))
 
@@ -42,15 +46,16 @@ class LatentAttention():
         # self.generation_loss = -tf.reduce_sum(self.images * tf.log(1e-8 + self.generated_images) + (1-self.images) * tf.log(1e-8 + 1 - self.generated_images),1)
 
 
-        self.Loss1 = tf.reduce_mean(self.generation_loss)
-        self.Loss2 = tf.reduce_mean(self.classifier_lost)
-        # self.cost = tf.reduce_mean(self.generation_loss)
+
 
         t_vars = tf.trainable_variables()
         self.e_vars = [var for var in t_vars if 'recognition' in var.name]
         self.d_vars = [var for var in t_vars if 'generation' in var.name]
         self.c_vars = [var for var in t_vars if 'classifier_net' in var.name]
 
+        self.Loss1 = tf.reduce_mean(self.generation_loss)
+        self.Loss2 = tf.reduce_mean(self.classifier_lost)+0.1*tf.nn.l2_loss(self.c_vars[0])
+        # self.cost = tf.reduce_mean(self.generation_loss)
 
         self.optimizer = tf.train.AdamOptimizer(0.0001).minimize(self.Loss1,var_list=[self.e_vars+self.d_vars])
         self.optimizer2 = tf.train.AdamOptimizer(0.0001).minimize(self.Loss2,var_list=[self.c_vars])
@@ -112,21 +117,29 @@ class LatentAttention():
             #     self.num_of_steps = 5
             # except:
             #     pass
+            gen_loss_list = []
+            class_loss_list = []
+            test_class_loss_list = []
             for step in range(self.num_of_steps):
                 batch1, labels = NextBatch1(self.Imgs1,self.labels,self.ImgSize,self.batchsize)
                 batch = NextBatch(self.Imgs,self.ImgSize,self.batchsize)
                 _, gen_loss = sess.run((self.optimizer, self.generation_loss),
-                                       feed_dict={self.images: batch})
+                                       feed_dict={self.images: batch,self.is_training:True})
                 _, class_loss = sess.run((self.optimizer2, self.classifier_lost),
-                                         feed_dict={self.images: batch1,self.tf_labels:labels})
+                                         feed_dict={self.images: batch1,self.tf_labels:labels,self.is_training:True})
                 # dumb hack to print cost every epoch
                 if step % 100 == 0:
-                    print("step %d: genloss %f classifier loss %f" % (step, np.mean(gen_loss), np.mean(class_loss)))
-                    generated_test = sess.run(self.generated_images, feed_dict={self.images: visualization})
+                    classification_test = sess.run(tf.nn.sigmoid(self.estimated_class), feed_dict={self.images: batchVis, self.tf_labels: labelsVis, self.is_training: False})
+                    print("step %d: genloss %f, classifier loss %f, test class loss %f" % (step, np.mean(gen_loss), np.mean(class_loss),np.mean(classification_test)))
+                    generated_test = sess.run(self.generated_images, feed_dict={self.images: visualization, self.is_training:False})
                     ims("results/" + str(step) + ".jpg", merge(generated_test[:49], [7, 7]))
-                    classification_test = sess.run(tf.nn.sigmoid(self.estimated_class), feed_dict={self.images: batchVis, self.tf_labels: labelsVis})
-                    diff = [(labelsVis[i], classification_test[i],labelsVis[i] - classification_test[i]) for i in range (self.batchsize)]
+                    gen_loss_list.append(np.mean(gen_loss))
+                    class_loss_list.append(np.mean(class_loss))
+                    test_class_loss_list.append(np.mean(classification_test))
                     logging.info('step is {d}'.format(d=step))
+                    logging.info('    Loss gen = {g}, class = {c}, test_class = {tc}'.format(g=gen_loss, c=class_loss,tc=classification_test))
+
+                    diff = [(labelsVis[i], classification_test[i], labelsVis[i] - classification_test[i]) for i in range(self.batchsize)]
                     for tup in diff:
                         logging.info('\t' + str(tup))
                     logging.info('##########################################################')
@@ -135,6 +148,12 @@ class LatentAttention():
                 if step == 149900:
                     self.save_diff(0, sess, batch)
                     self.save_diff(14, sess, batch)
+            logging.info('###############################################################################################')
+            for i in range(len(gen_loss_list)):
+                logging.info('        i = {i} Loss gen = {g}, class = {c}, test_class = {tc}'.format(i=i, g=gen_loss_list[i],
+                                                                                                     c=class_loss_list[i],
+                                                                                                     tc=test_class_loss_list[i]))
+
 
 
 try:
