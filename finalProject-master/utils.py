@@ -1,7 +1,7 @@
 import numpy as np
-import tensorflow as tf
 import os, random
 from PIL import Image
+
 
 def merge(images, size):
     h, w = images.shape[1], images.shape[2]
@@ -15,61 +15,64 @@ def merge(images, size):
     return img
 
 
-def ReadImgs(path,GreyFlag):
+def read_original_imgs(path, is_grey):
     files = os.listdir(path)
-    if GreyFlag:
-        Imgs = [np.asarray(Image.open(os.path.join(path, file)))[:,:,:1] for file in files]
+    if is_grey:
+        imgs = [np.asarray(Image.open(os.path.join(path, file)))[:,:,:1] for file in files]
     else:
-        Imgs = [np.asarray(Image.open(os.path.join(path, file))) for file in files]
-    return Imgs
+        imgs = [np.asarray(Image.open(os.path.join(path, file))) for file in files]
+    return imgs
 
 
-def ReadImgs1(path,GreyFlag):
+def read_imgs_with_labels(path, is_grey):
     files = os.listdir(path)
-    if GreyFlag:
-        Imgs = [np.asarray(Image.open(os.path.join(path, file)))[:,:,:1] for file in files if file != ".DS_Store"]
+    if is_grey:
+        imgs = [np.asarray(Image.open(os.path.join(path, file)))[:,:,:1] for file in files if file != ".DS_Store"]
     else:
-        Imgs = [np.asarray(Image.open(os.path.join(path, file))) for file in files if file != ".DS_Store"]
+        imgs = [np.asarray(Image.open(os.path.join(path, file))) for file in files if file != ".DS_Store"]
     Labels = [int(file.split('.')[1].split('_')[0]) for file in files if file != ".DS_Store"]
-    return Imgs, Labels
+    return imgs, Labels
 
-def NextBatch(Imgs,ImgSize,batch_size):
-    NumImgs = Imgs.__len__()
-    idxs = np.random.permutation(np.arange(0,NumImgs))[:batch_size]
+
+def get_next_random_batch(imgs, img_size, batch_size):
+    num_of_imgs = imgs.__len__()
+    indexes = np.random.permutation(np.arange(0,num_of_imgs))[:batch_size]
     batch = []
-    for idx in idxs:
+    for idx in indexes:
         while True:
             try:
-                img = Imgs[idx]
-                h = img.shape[0] - ImgSize
-                w = img.shape[1] - ImgSize
+                img = imgs[idx]
+                h = img.shape[0] - img_size
+                w = img.shape[1] - img_size
                 if h > 0 and w > 0:
                     p1 = random.randint(0, h)
                     p2 = random.randint(0, w)
-                    batch.append(img[p1:p1+ImgSize, p2:p2+ImgSize, :])
+                    batch.append(img[p1:p1+img_size, p2:p2+img_size, :])
                     break
                 else:
-                    idx = np.random.randint(0, NumImgs)
+                    idx = np.random.randint(0, num_of_imgs)
             except:
-                idx = np.random.randint(0, NumImgs)
+                idx = np.random.randint(0, num_of_imgs)
 
     return np.stack(batch, 0)/255.
 
-def NextBatch1(Imgs,labels,ImgSize,batch_size):
-    NumImgs = Imgs.__len__()
-    idxs = np.random.permutation(np.arange(0,NumImgs))[:batch_size]
-    batchLable = []
-    batch = []
-    for idx in idxs:
-        batch.append(Imgs[idx])
-        batchLable.append(labels[idx])
-    return np.stack(batch, 0)/255., np.array(batchLable)
 
-def testBatch(Imgs,labels,ImgSize,batch_size):
-    NumImgs = Imgs.__len__()
-    batchLable = []
+def get_next_nonrandom_batch(imgs, labels, img_size, batch_size):
+    num_of_imgs = imgs.__len__()
+    indexes = np.random.permutation(np.arange(0,num_of_imgs))[:batch_size]
+    batch_lable = []
     batch = []
-    for idx in range(NumImgs):
-        batch.append(Imgs[idx])
-        batchLable.append(labels[idx])
-    return np.stack(batch, 0)/255., np.array(batchLable)
+    for idx in indexes:
+        batch.append(imgs[idx])
+        batch_lable.append(labels[idx])
+    return np.stack(batch, 0)/255., np.array(batch_lable)
+
+
+def get_test_batch(imgs, labels, img_size, batch_size):
+    num_of_imgs = imgs.__len__()
+    batch_lable = []
+    batch = []
+    for idx in range(num_of_imgs):
+        batch.append(imgs[idx])
+        batch_lable.append(labels[idx])
+    return np.stack(batch, 0)/255., np.array(batch_lable)
