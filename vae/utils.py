@@ -1,6 +1,7 @@
 import numpy as np
 import os, random
 from PIL import Image
+import tensorflow as tf
 
 
 def merge(images, size):
@@ -76,3 +77,30 @@ def get_test_batch(imgs, labels, img_size, batch_size):
         batch.append(imgs[idx])
         batch_lable.append(labels[idx])
     return np.stack(batch, 0)/255., np.array(batch_lable)
+
+
+
+
+def shift_batch(data, offset, constant=0):
+    """
+    Shifts the array in two dimensions while setting rolled values to constant
+    :param data: 3d (batch,x,y)
+    :param offset: 2d (batch,xy)
+    :param constant: The constant to replace rolled values with
+    :return: The shifted array with "constant" where roll occurs
+    """
+    for i in range(data.shape[0]):
+        tImg = data[i,:,:,:]
+        tImg = np.roll(tImg, offset[i,0], axis=1)
+        if offset[i,0] < 0:
+            tImg[:, offset[i,0]:,:] = constant
+        elif offset[i,0] > 0:
+            tImg[:, 0:np.abs(offset[i,0]),:] = constant
+
+            tImg = np.roll(tImg, offset[i,1], axis=0)
+        if offset[i,1] < 0:
+            tImg[offset[i,1]:, :] = constant
+        elif offset[i,1] > 0:
+            tImg[0:np.abs(offset[i,1]), :] = constant
+        data[i, :, :, :] = tImg
+    return data

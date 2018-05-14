@@ -1,10 +1,6 @@
 import numpy as np
 import tensorflow as tf
 
-
-def batch_norm(x, is_training):
-    return tf.layers.batch_normalization(x,training=is_training)
-
 # standard convolution layer
 def conv2d(x, inputFeatures, outputFeatures, name):
     with tf.variable_scope(name):
@@ -52,3 +48,6 @@ def dense(x, inputFeatures, outputFeatures, scope=None, with_w=False):
             return tf.matmul(x, matrix) + bias, matrix, bias
         else:
             return tf.matmul(x, matrix) + bias
+
+def batch_norm(x, is_training):
+    return tf.layers.batch_normalization(x,training=is_training)
