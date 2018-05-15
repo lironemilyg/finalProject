@@ -122,9 +122,9 @@ class LatentAttention():
         fig.savefig('149900_{i}_fig.jpg'.format(i=i))
 
     def train(self):
-        generation_test_batch, _ = get_test_batch(self.test_imgs_cropped, self.test_labels, self.img_size, self.batch_size)
+        # generation_test_batch, _ = get_test_batch(self.test_imgs_cropped, self.test_labels, self.img_size, self.batch_size)
         classifier_test_batch, classifier_test_labels_batch = get_test_batch(self.test_imgs_cropped, self.test_labels, self.img_size, self.batch_size)
-        #generation_test_batch = classifier_test_batch
+        generation_test_batch = classifier_test_batch
         ims('./results/base.jpg', merge(generation_test_batch[:self.batch_size-1], [7, 7]))
         # train
         saver = tf.train.Saver(max_to_keep=2)
@@ -149,7 +149,7 @@ class LatentAttention():
                 # dumb hack to print cost every epoch
                 if step % 100 == 0:
                     if(step > 40000):
-                        classification_test_labels = sess.run(tf.nn.sigmoid(self.classifier_estimated), feed_dict={self.images: classifier_test_batch, self.tf_test_labels: classifier_test_labels_batch, self.is_training: False})
+                        classification_test_labels = sess.run(tf.nn.sigmoid(self.classifier_estimated), feed_dict={self.images: classifier_test_batch, self.tf_labels: classifier_test_labels_batch, self.is_training: False})
                         print("step %d: genloss %f, classifier loss %f, test class loss %f" % (step, np.mean(np.abs(nonrandom_labels-session_generation_loss)), np.mean(np.abs(session_classifier_loss-classifier_test_labels_batch)),np.mean(classification_test_labels)))
                     else:
                         print("step %d: genloss %f" % (step, np.mean(session_generation_loss)))
