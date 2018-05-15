@@ -1,0 +1,6 @@
+venvv/lib/python3.6/*
+venvv
+training/*
+.idea/workspace.xml
+*.jpg
+!.gitignore
