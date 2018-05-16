@@ -148,13 +148,13 @@ class LatentAttention():
                 nonrandom_batch, nonrandom_labels = get_next_nonrandom_batch(self.train_imgs_cropped, self.train_labels, self.img_size, self.batch_size)
                 _, session_generation_loss = sess.run((self.optimizer, self.generation_loss),
                                        feed_dict={self.images: random_batch,self.is_training:True})
-                if (step > -1):
+                if (step > 40000):
                     _, session_classifier_loss = sess.run((self.optimizer2, tf.nn.sigmoid(self.classifier_loss)),
                                                            feed_dict={self.images: nonrandom_batch,self.tf_labels:nonrandom_labels,self.is_training:True})
                 # dumb hack to print cost every epoch
                 if step % 100 == 0:
                     self.batch_size = 16
-                    if(step > -1):
+                    if(step > 40000):
                         classification_test_labels = sess.run(tf.nn.sigmoid(self.classifier_estimated), feed_dict={self.images: classifier_test_batch, self.tf_labels: classifier_test_labels_batch, self.is_training: False})
                         print("step %d: genloss %f, classifier loss %f, test class loss %f" % (step, np.mean(np.abs(nonrandom_labels-session_generation_loss)), np.mean(np.abs(nonrandom_labels-session_classifier_loss)), np.mean(classification_test_labels)))
                     else:
@@ -162,7 +162,7 @@ class LatentAttention():
                     generation_test = sess.run(self.generated_images, feed_dict={self.images: generation_test_batch, self.is_training: False})
                     ims("results/" + str(step) + ".jpg", merge(generation_test[:16], [4, 4]))
                     generation_loss_list.append(np.mean(session_generation_loss))
-                    if (step > -1):
+                    if (step > 40000):
                         classifier_train_loss_list.append(np.mean(session_classifier_loss))
                         classifier_test_loss_list.append(np.mean(classification_test_labels))
                         logging.info('step is {d}'.format(d=step))
