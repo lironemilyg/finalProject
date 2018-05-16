@@ -129,7 +129,7 @@ class LatentAttention():
         # generation_test_batch, _ = get_test_batch(self.test_imgs_cropped, self.test_labels, self.img_size, self.batch_size)
         classifier_test_batch, classifier_test_labels_batch = get_test_batch(self.test_imgs_cropped, self.test_labels, self.img_size, 16)
         generation_test_batch = classifier_test_batch
-        ims('./results/base.jpg', merge(generation_test_batch[:15], [4, 4]))
+        ims('./results/base.jpg', merge(generation_test_batch[:16], [4, 4]))
         # train
         saver = tf.train.Saver(max_to_keep=2)
         with tf.Session() as sess:
@@ -160,7 +160,7 @@ class LatentAttention():
                     else:
                         print("step %d: genloss %f" % (step, np.mean(session_generation_loss)))
                     generation_test = sess.run(self.generated_images, feed_dict={self.images: generation_test_batch, self.is_training: False})
-                    ims("results/" + str(step) + ".jpg", merge(generation_test[:15], [4, 4]))
+                    ims("results/" + str(step) + ".jpg", merge(generation_test[:16], [4, 4]))
                     generation_loss_list.append(np.mean(session_generation_loss))
                     if (step > -1):
                         classifier_train_loss_list.append(np.mean(session_classifier_loss))
