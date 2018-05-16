@@ -72,13 +72,14 @@ class LatentAttention():
             h3 = conv2d(h2, self.factor*32, self.factor*64, "d_h3")# 128x128x1 -> 64x64x16
             # h3 = batch_norm(h3, self.is_training)
             h3 = lrelu(h3)
-            h4 = conv2d(h3, self.factor*64, self.factor*128, "d_h4")# 128x128x1 -> 64x64x16
+            #h4 = conv2d(h3, self.factor*64, self.factor*128, "d_h4")# 128x128x1 -> 64x64x16
             # h4 = batch_norm(h4, self.is_training)
-            h4 = lrelu(h4)
-            h5 = conv2d(h4, self.factor*128, self.factor*256, "d_h5")# 128x128x1 -> 64x64x16
+            #h4 = lrelu(h4)
+            #h5 = conv2d(h4, self.factor*128, self.factor*256, "d_h5")# 128x128x1 -> 64x64x16
             # h5 = batch_norm(h5, self.is_training)
-            h5 = lrelu(h5)
-            h5_flat = tf.reshape(h5, [-1, 4*4*self.factor*256])
+            #h5 = lrelu(h5)
+            #h5_flat = tf.reshape(h5, [-1, 4*4*self.factor*256])
+            h5_flat = tf.reshape(h3, [-1, 16*16*self.factor*64])
 
             w_mean = dense(h5_flat, h5_flat.shape[1].value, self.n_z, "w_mean")
 
@@ -94,16 +95,18 @@ class LatentAttention():
     def generation(self, z):
         batch_size = tf.shape(z)[0]
         with tf.variable_scope("generation"):
-            z_develop = dense(z, self.n_z, 4*4*128*self.factor, scope='z_matrix')
+            #z_develop = dense(z, self.n_z, 4*4*128*self.factor, scope='z_matrix')
+            z_develop = dense(z, self.n_z, 16*16*32*self.factor, scope='z_matrix')
             #z_develop = batch_norm(z_develop, self.is_training)
-            z_matrix = tf.nn.relu(tf.reshape(z_develop, [batch_size, 4, 4, 128 * self.factor]))
-            h1 = conv_transpose(z_matrix, [batch_size, 8, 8, 64 * self.factor], "g_h1")
+            #z_matrix = tf.nn.relu(tf.reshape(z_develop, [batch_size, 4, 4, 128 * self.factor]))
+            z_matrix = tf.nn.relu(tf.reshape(z_develop, [batch_size, 16, 16, 32 * self.factor]))
+            #h1 = conv_transpose(z_matrix, [batch_size, 8, 8, 64 * self.factor], "g_h1")
             # h1 = batch_norm(h1, self.is_training)
-            h1 = tf.nn.relu(h1)
-            h2 = conv_transpose(h1, [batch_size, 16, 16, 32 * self.factor], "g_h2")
+            #h1 = tf.nn.relu(h1)
+            #h2 = conv_transpose(h1, [batch_size, 16, 16, 32 * self.factor], "g_h2")
             # h2 = batch_norm(h2, self.is_training)
-            h2 = tf.nn.relu(h2)
-            h3 = conv_transpose(h2, [batch_size, 32, 32, 16 * self.factor], "g_h3")
+            #h2 = tf.nn.relu(h2)
+            h3 = conv_transpose(z_matrix, [batch_size, 32, 32, 16 * self.factor], "g_h3")
             # h3 = batch_norm(h3, self.is_training)
             h3 = tf.nn.relu(h3)
             h4 = conv_transpose(h3, [batch_size, 64, 64, 8 * self.factor], "g_h4")
