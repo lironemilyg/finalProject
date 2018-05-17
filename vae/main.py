@@ -23,7 +23,7 @@ class LatentAttention():
         self.test_imgs_cropped, self.test_labels = read_imgs_with_labels(self.test_dataset_path, self.is_img_grey)
         self.num_of_original_imgs = self.original_imgs.__len__()
 
-        self.n_z = 100
+        self.n_z = 400
 
         if self.is_img_grey:
             self.images = tf.placeholder(tf.float32, [None, self.img_size, self.img_size, 1])
