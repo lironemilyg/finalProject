@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import os
 from scipy.misc import imsave as ims
 from utils import *
@@ -23,14 +23,15 @@ class LatentAttention():
         self.test_imgs_cropped, self.test_labels = read_imgs_with_labels(self.test_dataset_path, self.is_img_grey)
         self.num_of_original_imgs = self.original_imgs.__len__()
 
-        self.n_z = 400
+        self.n_z = 100
+        self.batch_size = 16
 
         if self.is_img_grey:
-            self.images = tf.placeholder(tf.float32, [None, self.img_size, self.img_size, 1])
+            self.images = tf.placeholder(tf.float32, [self.batch_size, self.img_size, self.img_size, 1])
         else:
-            self.images = tf.placeholder(tf.float32, [None, self.img_size, self.img_size, 3])
+            self.images = tf.placeholder(tf.float32, [self.batch_size, self.img_size, self.img_size, 3])
 
-        self.tf_labels = tf.placeholder(tf.float32, [None])
+        self.tf_labels = tf.placeholder(tf.float32, [self.batch_size])
         self.is_training = tf.placeholder(tf.bool, name='is_training')
 
         z_mean = self.recognition(self.images)
@@ -38,8 +39,7 @@ class LatentAttention():
 
         self.classifier_estimated = tf.squeeze(self.classifier_net(z_mean))
         # self.classifier_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.tf_labels, logits=self.classifier_estimated)
-        # self.classifier_loss = tf.nn.weighted_cross_entropy_with_logits(targets=self.tf_labels, logits=self.classifier_estimated, pos_weight=5)
-        self.classifier_loss = tf.nn.weighted_cross_entropy_with_logits(targets=self.tf_labels, logits=self.classifier_estimated, pos_weight=1.5)
+        self.classifier_loss = tf.nn.weighted_cross_entropy_with_logits(targets=self.tf_labels, logits=self.classifier_estimated,pos_weight=5)
 
         self.generated_images = self.generation(z_mean)
         self.generation_loss = tf.reduce_mean((self.images-self.generated_images)**2)
@@ -72,14 +72,13 @@ class LatentAttention():
             h3 = conv2d(h2, self.factor*32, self.factor*64, "d_h3")# 128x128x1 -> 64x64x16
             # h3 = batch_norm(h3, self.is_training)
             h3 = lrelu(h3)
-            #h4 = conv2d(h3, self.factor*64, self.factor*128, "d_h4")# 128x128x1 -> 64x64x16
+            h4 = conv2d(h3, self.factor*64, self.factor*128, "d_h4")# 128x128x1 -> 64x64x16
             # h4 = batch_norm(h4, self.is_training)
-            #h4 = lrelu(h4)
-            #h5 = conv2d(h4, self.factor*128, self.factor*256, "d_h5")# 128x128x1 -> 64x64x16
+            h4 = lrelu(h4)
+            h5 = conv2d(h4, self.factor*128, self.factor*256, "d_h5")# 128x128x1 -> 64x64x16
             # h5 = batch_norm(h5, self.is_training)
-            #h5 = lrelu(h5)
-            #h5_flat = tf.reshape(h5, [-1, 4*4*self.factor*256])
-            h5_flat = tf.reshape(h3, [-1, 16*16*self.factor*64])
+            h5 = lrelu(h5)
+            h5_flat = tf.reshape(h5, [self.batch_size, -1])
 
             w_mean = dense(h5_flat, h5_flat.shape[1].value, self.n_z, "w_mean")
 
@@ -93,43 +92,40 @@ class LatentAttention():
 
     # decoder
     def generation(self, z):
-        batch_size = tf.shape(z)[0]
         with tf.variable_scope("generation"):
-            #z_develop = dense(z, self.n_z, 4*4*128*self.factor, scope='z_matrix')
-            z_develop = dense(z, self.n_z, 16*16*32*self.factor, scope='z_matrix')
-            #z_develop = batch_norm(z_develop, self.is_training)
-            #z_matrix = tf.nn.relu(tf.reshape(z_develop, [batch_size, 4, 4, 128 * self.factor]))
-            z_matrix = tf.nn.relu(tf.reshape(z_develop, [batch_size, 16, 16, 32 * self.factor]))
-            #h1 = conv_transpose(z_matrix, [batch_size, 8, 8, 64 * self.factor], "g_h1")
+            z_develop = dense(z, self.n_z, 4*4*128*self.factor, scope='z_matrix')
+            z_develop = batch_norm(z_develop, self.is_training)
+            z_matrix = tf.nn.relu(tf.reshape(z_develop, [self.batch_size, 4, 4, 128 * self.factor]))
+            h1 = conv_transpose(z_matrix, [self.batch_size, 8, 8, 64 * self.factor], "g_h1")
             # h1 = batch_norm(h1, self.is_training)
-            #h1 = tf.nn.relu(h1)
-            #h2 = conv_transpose(h1, [batch_size, 16, 16, 32 * self.factor], "g_h2")
+            h1 = tf.nn.relu(h1)
+            h2 = conv_transpose(h1, [self.batch_size, 16, 16, 32 * self.factor], "g_h2")
             # h2 = batch_norm(h2, self.is_training)
-            #h2 = tf.nn.relu(h2)
-            h3 = conv_transpose(z_matrix, [batch_size, 32, 32, 16 * self.factor], "g_h3")
+            h2 = tf.nn.relu(h2)
+            h3 = conv_transpose(h2, [self.batch_size, 32, 32, 16 * self.factor], "g_h3")
             # h3 = batch_norm(h3, self.is_training)
             h3 = tf.nn.relu(h3)
-            h4 = conv_transpose(h3, [batch_size, 64, 64, 8 * self.factor], "g_h4")
+            h4 = conv_transpose(h3, [self.batch_size, 64, 64, 8 * self.factor], "g_h4")
             # h4 = batch_norm(h4, self.is_training)
             h4 = tf.nn.relu(h4)
-            h5 = conv_transpose(h4, [batch_size, 128, 128, 1], "g_h5")
+            h5 = conv_transpose(h4, [self.batch_size, 128, 128, 1], "g_h5")
             h5 = tf.nn.sigmoid(h5)
         return h5
 
-    #def save_diff(self, i, sess, batch):
-    #    rec_imgs = sess.run(self.generated_images, feed_dict={self.images: batch})
-    #    fig = plt.figure()
-    #    plt.subplot(1, 2, 1)
-    #    plt.imshow(np.reshape(batch[i], [128, 128]))
-    #    plt.subplot(1, 2, 2)
-    #    plt.imshow(rec_imgs[i, :, :, 0])
-    #    fig.savefig('149900_{i}_fig.jpg'.format(i=i))
+    def save_diff(self, i, sess, batch):
+        rec_imgs = sess.run(self.generated_images, feed_dict={self.images: batch})
+        fig = plt.figure()
+        plt.subplot(1, 2, 1)
+        plt.imshow(np.reshape(batch[i], [128, 128]))
+        plt.subplot(1, 2, 2)
+        plt.imshow(rec_imgs[i, :, :, 0])
+        fig.savefig('149900_{i}_fig.jpg'.format(i=i))
 
     def train(self):
-        # generation_test_batch, _ = get_test_batch(self.test_imgs_cropped, self.test_labels, self.img_size, self.batch_size)
-        classifier_test_batch, classifier_test_labels_batch = get_test_batch(self.test_imgs_cropped, self.test_labels, self.img_size, 16)
-        generation_test_batch = classifier_test_batch
-        ims('./results/base.jpg', merge(generation_test_batch[:16], [4, 4]))
+        generation_test_batch, _ = get_test_batch(self.test_imgs_cropped, self.test_labels, self.img_size, self.batch_size)
+        classifier_test_batch, classifier_test_labels_batch = get_test_batch(self.test_imgs_cropped, self.test_labels, self.img_size, self.batch_size)
+        #generation_test_batch = classifier_test_batch
+        ims('./results/base.jpg', merge(generation_test_batch[:self.batch_size-1], [7, 7]))
         # train
         saver = tf.train.Saver(max_to_keep=2)
         with tf.Session() as sess:
@@ -143,7 +139,6 @@ class LatentAttention():
             classifier_train_loss_list = []
             classifier_test_loss_list = []
             for step in range(self.num_of_steps):
-                self.batch_size = 100
                 random_batch = get_next_random_batch(self.original_imgs, self.img_size, self.batch_size)
                 nonrandom_batch, nonrandom_labels = get_next_nonrandom_batch(self.train_imgs_cropped, self.train_labels, self.img_size, self.batch_size)
                 _, session_generation_loss = sess.run((self.optimizer, self.generation_loss),
@@ -153,14 +148,13 @@ class LatentAttention():
                                                            feed_dict={self.images: nonrandom_batch,self.tf_labels:nonrandom_labels,self.is_training:True})
                 # dumb hack to print cost every epoch
                 if step % 100 == 0:
-                    self.batch_size = 16
                     if(step > 40000):
-                        classification_test_labels = sess.run(tf.nn.sigmoid(self.classifier_estimated), feed_dict={self.images: classifier_test_batch, self.tf_labels: classifier_test_labels_batch, self.is_training: False})
-                        print("step %d: genloss %f, classifier loss %f, test class loss %f" % (step, np.mean(np.abs(nonrandom_labels-session_generation_loss)), np.mean(np.abs(nonrandom_labels-session_classifier_loss)), np.mean(classification_test_labels)))
+                        classification_test_labels = sess.run(tf.nn.sigmoid(self.classifier_estimated), feed_dict={self.images: classifier_test_batch, self.tf_test_labels: classifier_test_labels_batch, self.is_training: False})
+                        print("step %d: genloss %f, classifier loss %f, test class loss %f" % (step, np.mean(np.abs(nonrandom_labels-session_generation_loss)), np.mean(np.abs(session_classifier_loss-classifier_test_labels_batch)),np.mean(classification_test_labels)))
                     else:
                         print("step %d: genloss %f" % (step, np.mean(session_generation_loss)))
                     generation_test = sess.run(self.generated_images, feed_dict={self.images: generation_test_batch, self.is_training: False})
-                    ims("results/" + str(step) + ".jpg", merge(generation_test[:16], [4, 4]))
+                    ims("results/" + str(step) + ".jpg", merge(generation_test[:49], [7, 7]))
                     generation_loss_list.append(np.mean(session_generation_loss))
                     if (step > 40000):
                         classifier_train_loss_list.append(np.mean(session_classifier_loss))
@@ -174,9 +168,9 @@ class LatentAttention():
                         logging.info('##########################################################')
                 if step % 5000 == 0:
                     saver.save(sess, os.getcwd() + "/training/train", global_step=step)
-                #if step == 149900:
-                #    self.save_diff(0, sess, random_batch)
-                #    self.save_diff(14, sess, random_batch)
+                if step == 149900:
+                    self.save_diff(0, sess, random_batch)
+                    self.save_diff(14, sess, random_batch)
             # logging.info('###############################################################################################')
             # for i in range(len(generation_loss_list)):
             #     logging.info('        i = {i} Loss gen = {g}, class = {c}, test_class = {tc}'.format(i=i, g=generation_loss_list[i],
