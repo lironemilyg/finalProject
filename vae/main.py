@@ -42,7 +42,8 @@ class LatentAttention():
         self.classifier_loss = tf.nn.weighted_cross_entropy_with_logits(targets=self.tf_labels, logits=self.classifier_estimated, pos_weight=1.5)
 
         self.generated_images = self.generation(z_mean)
-        self.generation_loss = tf.reduce_mean((self.images-self.generated_images)**2)
+        # self.generation_loss = tf.reduce_mean((self.images-self.generated_images)**2) 19.05
+        self.generation_loss = tf.reduce_sum((self.images - self.generated_images) ** 2)
 
         # self.generation_loss = -tf.reduce_sum(self.images * tf.log(1e-8 + self.generated_images) + (1-self.images) * tf.log(1e-8 + 1 - self.generated_images),1)
 
