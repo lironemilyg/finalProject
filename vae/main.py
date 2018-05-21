@@ -50,7 +50,7 @@ class LatentAttention():
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
             self.optimizer = tf.train.AdamOptimizer(0.001).minimize(self.Loss1,var_list=[self.e_vars+self.d_vars])
-        self.optimizer2 = tf.train.GradientDescentOptimizer(0.001).minimize(self.Loss2,var_list=[self.c_vars])
+        self.optimizer2 = tf.train.GradientDescentOptimizer(0.01).minimize(self.Loss2,var_list=[self.c_vars])
 
 
 
