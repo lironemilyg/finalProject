@@ -3,6 +3,7 @@ import os, random
 from PIL import Image
 import csv
 import glob
+import math
 import tensorflow as tf
 from scipy.misc import imrotate
 
@@ -24,14 +25,14 @@ def read_original_imgs(path):
     imgs = [np.asarray(Image.open(file))[:,:,:1]/255. for file in files]
     return imgs
 
-
 def read_imgs_with_labels(path):
     files = glob.glob(os.path.join(path,'*B-mode.bmp'))
     imgs = [np.asarray(Image.open(file))[:,:,:1]/255. for file in files]
     Labels = [int(os.path.split(file)[1].split('.')[1].split('_')[0]) for file in files]
-    return imgs, Labels
+    return imgs, Labels, files
 
-def split_train_test(imgs,labels,test_imgs_per_class = 5):
+
+def split_train_test(imgs,labels,img_files, test_imgs_per_class = 5):
     np_labels = np.array(labels)
     t = np.random.permutation(np.where(np_labels==0)[0])
     test_index = t[:test_imgs_per_class]
@@ -40,10 +41,12 @@ def split_train_test(imgs,labels,test_imgs_per_class = 5):
     test_index = np.concatenate([test_index,t[:test_imgs_per_class]])
     train_index = np.concatenate([train_index,t[test_imgs_per_class:]])
     train_imgs = [imgs[i] for i in train_index]
-    trian_labels = [labels[i] for i in train_index]
+    train_labels = [labels[i] for i in train_index]
+    train_imgs_files = [img_files[i] for i in train_index]
     test_imgs = [imgs[i] for i in test_index]
     test_labels = [labels[i] for i in test_index]
-    return train_imgs, trian_labels, test_imgs, test_labels
+    test_imgs_files = [img_files[i] for i in test_index]
+    return train_imgs, train_labels, test_imgs, test_labels, test_imgs_files, train_imgs_files
 
 def get_next_random_batch(imgs, img_size, batch_size):
     num_of_imgs = imgs.__len__()
@@ -68,7 +71,7 @@ def get_next_random_batch(imgs, img_size, batch_size):
 
     return np.stack(batch, 0)
 
-def get_next_random_batch1(imgs,labels, img_size, batch_size):
+def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_pixel_data, image_files):
     num_of_imgs = imgs.__len__()
     indexes = np.random.permutation(np.arange(0,num_of_imgs))[:batch_size]
     #imrotate()
@@ -81,9 +84,25 @@ def get_next_random_batch1(imgs,labels, img_size, batch_size):
                 h = img.shape[0] - img_size
                 w = img.shape[1] - img_size
                 if h > 0 and w > 0:
-                    p1 = random.randint(0, h)
-                    p2 = random.randint(0, w)
+                    image_name = image_files[idx].split("\\")[1]
+
+                    x = image_pixel_data[image_name][0]
+                    if(float(x) - img_size/2 < 0):
+                        p1 = 0
+                    elif (float(x) + img_size/2 > img.shape[1]):
+                        p1 = w
+                    else:
+                        p1 = float(x) - img_size / 2
+                    y = image_pixel_data[image_name][1]
+                    if (float(y) - img_size / 2 < 0):
+                        p2 = 0
+                    elif (float(y) + img_size / 2 > img.shape[0]):
+                        p1 = h
+                    else:
+                        p2 = float(y) - img_size / 2
+
                     batch.append(img[p1:p1+img_size, p2:p2+img_size, :])
+
                     label.append(labels[idx])
                     break
                 else:
@@ -140,21 +159,43 @@ def shift_batch(data, offset, constant=0):
         data[i, :, :, :] = tImg
     return data
 
+
+def load_data_from_csv(path):
+    dict = {}
+    with open(path, newline = '') as data_file:
+        data = csv.DictReader(data_file)
+        for row in data:
+            dict[row['filename']] = [row['x'], row['y'], row['height'], row['width']]
+    return dict
+
 def CreateCenerMassFile(path):
     import matplotlib.pyplot as plt
     files = os.listdir(path)
-    files = [file for file in files if 'B-mode' in file]
+    files = sorted([file for file in files if 'B-mode' in file])
     plt.ion()
     plt.figure()
-    with open(os.path.join(path,'Benchmark1.csv'), 'w', newline='') as myfile:
+    with open(os.path.join(path,'Benchmark2.csv'), 'w', newline='') as myfile:
         wr = csv.writer(myfile, quoting=csv.QUOTE_NONE)
-        for i in range(58,files.__len__()):
+        wr.writerow(["filename", "x", "y", "height", "width"])
+        for i in range(files.__len__()):
             f = files[i]
             mylist = [f]
             img = Image.open(os.path.join(path, f))
             plt.imshow(img)
             plt.title(f)
-            a = plt.ginput(1)
-            mylist = mylist+list(a[0])
+            center = plt.ginput(1)
+            width = plt.ginput(2)
+            width = abs(width[1][0] - width[0][0])
+            print(width)
+            height = plt.ginput(2)
+            height = abs(height[1][1] - height[0][1])
+            print(height)
+
+            #mylist = mylist+list([center[0],height,width])
+            mylist.extend(list(center[0]) + [height] + [width])
             wr.writerow(mylist)
+
+
+#CreateCenerMassFile(r'./dataset')
+
 

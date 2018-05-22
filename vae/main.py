@@ -12,6 +12,7 @@ from model import *
 class LatentAttention():
     def __init__(self):
         self.original_dataset_path = r'./dataset'
+        self.benchmark_path = r'./Benchmark2.csv'
         self.img_size = 128
         self.num_of_steps = 150000
         self.factor = 1
@@ -19,9 +20,9 @@ class LatentAttention():
         #CreateCenerMassFile(self.original_dataset_path)
 
         self.unsupervised_imgs = read_original_imgs(self.original_dataset_path)
-        self.supervised_imgs, self.supervised_imgs_labels = read_imgs_with_labels(self.original_dataset_path)
-        self.train_imgs, self.trian_labels, self.test_imgs, self.test_labels = split_train_test(self.supervised_imgs, self.supervised_imgs_labels, test_imgs_per_class=5)
-
+        self.supervised_imgs, self.supervised_imgs_labels, self.image_files = read_imgs_with_labels(self.original_dataset_path)
+        self.train_imgs, self.trian_labels, self.test_imgs, self.test_labels, self.test_img_files, self.train_img_files = split_train_test(self.supervised_imgs, self.supervised_imgs_labels,  self.image_files, test_imgs_per_class=5)
+        self.image_pixel_data = load_data_from_csv(self.benchmark_path)
         self.images = tf.placeholder(tf.float32, [None, self.img_size, self.img_size, 1])
 
 
@@ -50,7 +51,7 @@ class LatentAttention():
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
             self.optimizer = tf.train.AdamOptimizer(0.001).minimize(self.Loss1,var_list=[self.e_vars+self.d_vars])
-        self.optimizer2 = tf.train.GradientDescentOptimizer(0.01).minimize(self.Loss2,var_list=[self.c_vars])
+        self.optimizer2 = tf.train.GradientDescentOptimizer(0.1).minimize(self.Loss2,var_list=[self.c_vars])
 
 
 
@@ -83,12 +84,14 @@ class LatentAttention():
                     ims("results/" + str(step) + ".jpg", merge(generation_test, [8, 8]))
 
             # train classifier
-            batch, labels = get_next_random_batch1(self.train_imgs, self.trian_labels, self.img_size, self.batch_size)
-            for step in range(int(self.num_of_steps/50)):
 
-                #_, session_classifier_loss,train_label = sess.run((self.optimizer2, self.Loss2,tf.nn.sigmoid(self.classifier_estimated)),
-                _, session_classifier_loss = sess.run((self.optimizer2, self.Loss2),
-                                                       feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:False})
+            for step in range(int(self.num_of_steps/50)):
+                batch, labels = get_next_random_batch_with_labels(self.train_imgs, self.trian_labels, self.img_size,
+                                                                  self.batch_size, self.image_pixel_data, self.train_img_files)
+                _, session_classifier_loss,train_label = sess.run((self.optimizer2, self.Loss2,tf.nn.sigmoid(self.classifier_estimated)),
+                                                                  feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:False})
+                #_, session_classifier_loss = sess.run((self.optimizer2, self.Loss2),
+                #                                       feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:False})
 
                 print(session_classifier_loss)
                 #if step % 100:
