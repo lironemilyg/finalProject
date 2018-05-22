@@ -75,6 +75,8 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
     num_of_imgs = imgs.__len__()
     indexes = np.random.permutation(np.arange(0,num_of_imgs))[:batch_size]
     #imrotate()
+    #delimiter = "\\" #windows
+    delimiter = 't/' #linux
     batch = []
     label = []
     for idx in indexes:
@@ -84,8 +86,8 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                 h = img.shape[0] - img_size
                 w = img.shape[1] - img_size
                 if h > 0 and w > 0:
-                    print(image_files[0])
-                    image_name = image_files[idx].split("\\")[1]
+
+                    image_name = image_files[idx].split(delimiter)[1]
 
                     x = image_pixel_data[image_name][0]
                     if(float(x) - img_size/2 < 0):
