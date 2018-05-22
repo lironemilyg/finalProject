@@ -24,16 +24,16 @@ def recognition(input_images):
 def classifier_net(z):
     with tf.variable_scope("classifier_net"):
         z = tf.reshape(z, [-1, 16 * 16])
-        w_mean = dense(z, 16*16, 10*10, "classifier")
-        w_mean = tf.nn.relu(w_mean)
-        w_mean_2 = dense(w_mean, 10*10, 1, "classifier_2")
+        w_mean = dense(z, 16*16, 1, "classifier")
+        #w_mean = tf.nn.relu(w_mean)
+        #w_mean_2 = dense(w_mean, 10*10, 1, "classifier_2")
         #w_mean_2 = tf.nn.relu(w_mean_2)
         #w_mean_3 = dense(w_mean_2, 4 * 4, 1, "classifier_3")
         #w_mean_3 = tf.nn.relu(w_mean_3)
         #w_mean_4 = dense(w_mean_3, 4 * 4, 2 * 2, "classifier_4")
         #w_mean_4 = tf.nn.relu(w_mean_4)
         #w_mean_5 = dense(w_mean_4, 2 * 2, 1, "classifier_5")
-    return w_mean_2
+    return w_mean
 
 
 # decoder

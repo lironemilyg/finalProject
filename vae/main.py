@@ -99,10 +99,18 @@ class LatentAttention():
 
                 print("train classifier loss " + str(session_classifier_loss))
                 if step % 100 == 0:
+                    logging.info('########################TRAIN###########################')
+                    real_vs_estimated_labels = [
+                        (labels[i], train_label[i], int(round(abs(labels[i] - train_label[i]))))
+                        for i in range(self.batch_size)]
+                    for tup in real_vs_estimated_labels:
+                        logging.info('\t' + str(tup))
+                    logging.info('##########################################################')
                     self.batch_size = 10
                     _, session_classifier_loss, test_label_result = sess.run((self.optimizer2, self.Loss2, tf.nn.sigmoid(self.classifier_estimated)),
                                                                        feed_dict={self.images: test_batch, self.tf_labels: test_labels, self.is_training: True})
                     logging.info('step is {d}'.format(d=step))
+                    logging.info('########################TEST###########################')
                     real_vs_estimated_labels = [(test_labels[i], test_label_result[i], int(round(abs(test_labels[i]-test_label_result[i])))) for i in range(self.batch_size)]
                     for tup in real_vs_estimated_labels:
                         logging.info('\t' + str(tup))
