@@ -86,6 +86,7 @@ class LatentAttention():
             # train classifier
 
             for step in range(int(self.num_of_steps/50)):
+                
                 batch, labels = get_next_random_batch_with_labels(self.train_imgs, self.trian_labels, self.img_size,
                                                                   self.batch_size, self.image_pixel_data, self.train_img_files)
                 _, session_classifier_loss,train_label = sess.run((self.optimizer2, self.Loss2,tf.nn.sigmoid(self.classifier_estimated)),

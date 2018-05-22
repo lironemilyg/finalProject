@@ -84,6 +84,7 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                 h = img.shape[0] - img_size
                 w = img.shape[1] - img_size
                 if h > 0 and w > 0:
+                    print(image_files[0])
                     image_name = image_files[idx].split("\\")[1]
 
                     x = image_pixel_data[image_name][0]
