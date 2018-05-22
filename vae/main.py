@@ -80,7 +80,7 @@ class LatentAttention():
                     #     print("step %d: genloss %f, classifier loss %f, test class loss %f" % (step, np.mean(np.abs(nonrandom_labels-session_generation_loss)), np.mean(np.abs(nonrandom_labels-session_classifier_loss)), np.mean(classification_test_labels)))
                     # else:
                     #     print("step %d: genloss %f" % (step, np.mean(session_generation_loss)))
-                    generation_test = sess.run(self.generated_images, feed_dict={self.images: visu_imgs_AE, self.is_training: False})
+                    generation_test = sess.run(self.generated_images, feed_dict={self.images: visu_imgs_AE, self.is_training: True})
                     ims("results/" + str(step) + ".jpg", merge(generation_test, [8, 8]))
 
             # train classifier
@@ -93,7 +93,7 @@ class LatentAttention():
                 batch, labels = get_next_random_batch_with_labels(self.train_imgs, self.trian_labels, self.img_size,
                                                                   self.batch_size, self.image_pixel_data, self.train_img_files)
                 _, session_classifier_loss,train_label = sess.run((self.optimizer2, self.Loss2,tf.nn.sigmoid(self.classifier_estimated)),
-                                                                  feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:False})
+                                                                  feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:True})
                 #_, session_classifier_loss = sess.run((self.optimizer2, self.Loss2),
                 #                                       feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:False})
 
@@ -108,7 +108,7 @@ class LatentAttention():
                     logging.info('##########################################################')
                     self.batch_size = 10
                     session_classifier_loss, test_label_result = sess.run((self.Loss2, tf.nn.sigmoid(self.classifier_estimated)),
-                                                                       feed_dict={self.images: test_batch, self.tf_labels: test_labels, self.is_training: True})
+                                                                       feed_dict={self.images: test_batch, self.tf_labels: test_labels, self.is_training: False})
                     logging.info('step is {d}'.format(d=step))
                     logging.info('########################TEST###########################')
                     real_vs_estimated_labels = [(test_labels[i], test_label_result[i], int(round(abs(test_labels[i]-test_label_result[i])))) for i in range(self.batch_size)]
