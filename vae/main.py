@@ -86,7 +86,6 @@ class LatentAttention():
             # train classifier
 
             for step in range(int(self.num_of_steps/50)):
-
                 batch, labels = get_next_random_batch_with_labels(self.train_imgs, self.trian_labels, self.img_size,
                                                                   self.batch_size, self.image_pixel_data, self.train_img_files)
                 _, session_classifier_loss,train_label = sess.run((self.optimizer2, self.Loss2,tf.nn.sigmoid(self.classifier_estimated)),
@@ -95,12 +94,12 @@ class LatentAttention():
                 #                                       feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:False})
 
                 print(session_classifier_loss)
-                #if step % 100:
-                #    logging.info('step is {d}'.format(d=step))
-                #    real_vs_estimated_labels = [(labels[i], train_label[i], train_label[i]-labels[i]) for i in range(self.batch_size)]
-                #    for tup in real_vs_estimated_labels:
-                #        logging.info('\t' + str(tup))
-                #    logging.info('##########################################################')
+                if step % 100 == 0:
+                   logging.info('step is {d}'.format(d=step))
+                   real_vs_estimated_labels = [(labels[i], train_label[i], train_label[i]-labels[i]) for i in range(self.batch_size)]
+                   for tup in real_vs_estimated_labels:
+                       logging.info('\t' + str(tup))
+                   logging.info('##########################################################')
                 #print(session_classifier_loss)
 
             # dumb hack to print cost every epoch
