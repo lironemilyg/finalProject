@@ -67,7 +67,7 @@ class LatentAttention():
             classifier_train_loss_list = []
             classifier_test_loss_list = []
             # train autoencoder
-            for step in range(int(self.num_of_steps/50)):
+            for step in range(int(0)):
                 random_batch = get_next_random_batch(self.unsupervised_imgs, self.img_size, self.batch_size)
                 _, session_generation_loss = sess.run((self.optimizer, self.generation_loss),
                                        feed_dict={self.images: random_batch,self.is_training:True})
@@ -107,7 +107,7 @@ class LatentAttention():
                         logging.info('\t' + str(tup))
                     logging.info('##########################################################')
                     self.batch_size = 10
-                    _, session_classifier_loss, test_label_result = sess.run((self.optimizer2, self.Loss2, tf.nn.sigmoid(self.classifier_estimated)),
+                    session_classifier_loss, test_label_result = sess.run((self.Loss2, tf.nn.sigmoid(self.classifier_estimated)),
                                                                        feed_dict={self.images: test_batch, self.tf_labels: test_labels, self.is_training: True})
                     logging.info('step is {d}'.format(d=step))
                     logging.info('########################TEST###########################')
