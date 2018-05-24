@@ -1,5 +1,6 @@
 import numpy as np
 import os, random
+from tensorflow.python.framework import ops
 from PIL import Image
 import csv
 import glob
@@ -75,8 +76,8 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
     num_of_imgs = imgs.__len__()
     indexes = np.random.permutation(np.arange(0,num_of_imgs))[:batch_size]
     #imrotate()
-    #delimiter = "\\" #windows
-    delimiter = 't/' #linux
+    delimiter = "\\" #windows
+    #delimiter = 't/' #linux
     batch = []
     label = []
     for idx in indexes:
@@ -106,7 +107,11 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                     p1 = int(p1)
                     p2 = int(p2)
                     p1, p2 = p2, p1
-                    batch.append(img[p1:p1+img_size, p2:p2+img_size, :])
+                    img = img[p1:p1+img_size, p2:p2+img_size, :]
+                    if(random.randint(0,1) == 1):
+                        img = np.fliplr(img)
+                    #batch.append(img[p1:p1+img_size, p2:p2+img_size, :])
+                    batch.append(img)
 
                     label.append(labels[idx])
                     break
