@@ -67,7 +67,7 @@ class LatentAttention():
             classifier_train_loss_list = []
             classifier_test_loss_list = []
             # train autoencoder
-            for step in range(int(self.num_of_steps/50)):
+            for step in range(int(self.num_of_steps/25)):
                 random_batch = get_next_random_batch(self.unsupervised_imgs, self.img_size, self.batch_size)
                 _, session_generation_loss = sess.run((self.optimizer, self.generation_loss),
                                        feed_dict={self.images: random_batch,self.is_training:True})
@@ -88,7 +88,7 @@ class LatentAttention():
             test_batch, test_labels = get_next_random_batch_with_labels(self.test_imgs, self.test_labels, self.img_size,
                                                               self.batch_size, self.image_pixel_data,
                                                               self.test_img_files)
-            for step in range(int(self.num_of_steps/25)):
+            for step in range(int(self.num_of_steps/50)):
                 self.batch_size = 100
                 batch, labels = get_next_random_batch_with_labels(self.train_imgs, self.trian_labels, self.img_size,
                                                                   self.batch_size, self.image_pixel_data, self.train_img_files)
