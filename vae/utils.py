@@ -86,9 +86,7 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                 h = img.shape[0] - img_size
                 w = img.shape[1] - img_size
                 if h > 0 and w > 0:
-
                     image_name = image_files[idx].split(delimiter)[1]
-
                     x = image_pixel_data[image_name][0]
                     if(float(x) - img_size/2 < 0):
                         p1 = 0
@@ -109,6 +107,8 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                     img = img[p1:p1+img_size, p2:p2+img_size, :]
                     if(random.randint(0,1) == 1):
                         img = np.fliplr(img)
+                    if (random.randint(0, 1) == 1):
+                        img = np.flipud(img)
                     #batch.append(img[p1:p1+img_size, p2:p2+img_size, :])
                     batch.append(img)
 
@@ -145,8 +145,9 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                             idx = np.random.randint(0, num_of_imgs)
                         else:
                             if (random.randint(0, 1) == 1):
-
                                 img = np.fliplr(img)
+                            if (random.randint(0, 1) == 1):
+                                img = np.flipud(img)
                             # batch.append(img[p1:p1+img_size, p2:p2+img_size, :])
                             batch.append(img)
 
