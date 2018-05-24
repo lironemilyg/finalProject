@@ -5,6 +5,7 @@ import csv
 import glob
 import tensorflow as tf
 from scipy.misc import imrotate
+import scipy
 
 
 def merge(images, size):
@@ -114,7 +115,41 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                     label.append(labels[idx])
                     break
                 else:
-                    idx = np.random.randint(0, num_of_imgs)
+                    mult = 128/ min(img.shape[0], img.shape[1])
+                    img.resize((int(img.shape[0] * mult + 1), int(img.shape[1] * mult + 1),1), refcheck=False)
+                    h = img.shape[0] - img_size
+                    w = img.shape[1] - img_size
+                    if h > 0 and w > 0:
+
+                        image_name = image_files[idx].split(delimiter)[1]
+
+                        x = image_pixel_data[image_name][0]
+                        if (float(x) - img_size / 2 < 0):
+                            p1 = 0
+                        elif (float(x) + img_size / 2 > img.shape[0]):
+                            p1 = w
+                        else:
+                            p1 = float(x) - img_size / 2
+                        y = image_pixel_data[image_name][1]
+                        if (float(y) - img_size / 2 < 0):
+                            p2 = 0
+                        elif (float(y) + img_size / 2 > img.shape[1]):
+                            p2 = h
+                        else:
+                            p2 = float(y) - img_size / 2
+                        p1 = int(p1)
+                        p2 = int(p2)
+                        p1, p2 = p2, p1
+                        img = img[p1:p1 + img_size, p2:p2 + img_size, :]
+                        if (random.randint(0, 1) == 1):
+                            img = np.fliplr(img)
+                        # batch.append(img[p1:p1+img_size, p2:p2+img_size, :])
+                        batch.append(img)
+
+                        label.append(labels[idx])
+                        break
+
+                    #idx = np.random.randint(0, num_of_imgs)
             except:
                 idx = np.random.randint(0, num_of_imgs)
 
