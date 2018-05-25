@@ -46,7 +46,7 @@ class LatentAttention():
         self.c_vars = [var for var in t_vars if 'classifier_net' in var.name]
 
         self.Loss1 = tf.reduce_mean(self.generation_loss)
-        self.Loss2 = tf.reduce_mean(self.classifier_loss)# + 0.1 * tf.nn.l2_loss(self.c_vars[0])
+        self.Loss2 = tf.reduce_mean(self.classifier_loss) + 0.05 * tf.nn.l2_loss(self.c_vars[0])
 
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
