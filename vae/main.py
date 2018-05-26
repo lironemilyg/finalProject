@@ -67,7 +67,7 @@ class LatentAttention():
             classifier_train_loss_list = []
             classifier_test_loss_list = []
             # train autoencoder
-            for step in range(int(0)):
+            for step in range(int(self.num_of_steps/25)):
                 random_batch = get_next_random_batch(self.unsupervised_imgs, self.img_size, self.batch_size)
                 _, session_generation_loss = sess.run((self.optimizer, self.generation_loss),
                                        feed_dict={self.images: random_batch,self.is_training:True})
