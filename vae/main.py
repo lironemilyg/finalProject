@@ -14,7 +14,7 @@ class LatentAttention():
         self.original_dataset_path = r'./dataset'
         self.benchmark_path = r'./Benchmark2.csv'
         self.img_size = 128
-        self.num_of_steps = 150000
+        self.num_of_steps = 15000
         self.factor = 1
 
         #CreateCenerMassFile(self.original_dataset_path)
