@@ -119,8 +119,14 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                     p2 = int(p2)
                     p1, p2 = p2, p1
                     if (random.randint(0, 9) == 1):
+                        height = image_pixel_data[image_name][2]
+                        width = image_pixel_data[image_name][3]
+                        scale = 1.0
+                        if(height <128 and width < 128 and random.randint(0,1) == 1):
+                            scale = random.random()*128/min(img.shape[0], img.shape[1])
+
                         degree = random.randint(0, 360)
-                        img = rotate(img, degree, (int(float(x)), int(float(y))))
+                        img = rotate(img, degree, (int(float(x)), int(float(y))), scale)
                     img = img[p1:p1+img_size, p2:p2+img_size, :]
                     if(random.randint(0,4) == 1):
                         img = np.fliplr(img)
