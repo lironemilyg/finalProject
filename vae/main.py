@@ -118,7 +118,7 @@ class LatentAttention():
                             logging.info('\t' + str(tup))
                         logging.info('##########################################################')
                     self.batch_size = 10
-                    if(step>4000):
+                    if(step>6000):
                         session_classifier_loss, test_label_result = sess.run((self.Loss2, tf.nn.sigmoid(self.classifier_estimated)),
                                                                            feed_dict={self.images: test_batch, self.tf_labels: test_labels, self.is_training: False})
                         logging.info('########################TEST###########################')
