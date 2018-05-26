@@ -101,10 +101,11 @@ class LatentAttention():
                                                                       self.batch_size, self.image_pixel_data, self.train_img_files)
                     _, session_classifier_loss,train_label = sess.run((self.optimizer2, self.Loss2,tf.nn.sigmoid(self.classifier_estimated)),
                                                                       feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:True})
+                    print("train classifier loss " + str(session_classifier_loss))
+
                 #_, session_classifier_loss = sess.run((self.optimizer2, self.Loss2),
                 #                                       feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:False})
 
-                    print("train classifier loss " + str(session_classifier_loss))
                 if step % 100 == 0:
                     if(step > 6000):
                         logging.info('##########################################################')
@@ -131,7 +132,7 @@ class LatentAttention():
                         logging.info('##########################################################')
                         print("test classifier loss " + str(session_classifier_loss))
 
-                    generation_test = sess.run(self.generated_images, feed_dict={self.images: test_batch, self.is_training: True})
+                    generation_test = sess.run(self.generated_images, feed_dict={self.images: test_batch, self.is_training: False})
                     ims("results/" + str(step) + ".jpg", merge(generation_test, [5, 2]))
 
 
