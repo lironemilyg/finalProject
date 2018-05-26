@@ -2,6 +2,7 @@ import numpy as np
 import os, random
 from PIL import Image
 import csv
+import cv2
 import glob
 import tensorflow as tf
 from scipy.misc import imrotate
@@ -19,6 +20,17 @@ def merge(images, size):
 
     return img
 
+def rotate(image, angle, center = None, scale = 1.0):
+    (h, w) = image.shape[:2]
+
+    if center is None:
+        center = (w / 2, h / 2)
+
+    # Perform the rotation
+    M = cv2.getRotationMatrix2D(center, angle, scale)
+    rotated = cv2.warpAffine(image, M, (w, h))
+    rotated = rotated[:, :, np.newaxis]
+    return rotated
 
 def read_original_imgs(path):
     files = glob.glob(os.path.join(path,'*.bmp'))
@@ -75,8 +87,8 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
     num_of_imgs = imgs.__len__()
     indexes = np.random.permutation(np.arange(0,num_of_imgs))[:batch_size]
     #imrotate()
-    #delimiter = "\\" #windows
-    delimiter = 't/' #linux
+    delimiter = "\\" #windows
+    #delimiter = 't/' #linux
     batch = []
     label = []
     for idx in indexes:
@@ -104,12 +116,16 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                     p1 = int(p1)
                     p2 = int(p2)
                     p1, p2 = p2, p1
+                    if (random.randint(0, 9) == 1):
+                        degree = random.randint(0, 360)
+                        img = rotate(img, degree, (int(float(x)), int(float(y))))
                     img = img[p1:p1+img_size, p2:p2+img_size, :]
-                    if(random.randint(0,1) == 1):
+                    if(random.randint(0,4) == 1):
                         img = np.fliplr(img)
-                    if (random.randint(0, 1) == 1):
+                    if (random.randint(0, 4) == 1):
                         img = np.flipud(img)
                     #batch.append(img[p1:p1+img_size, p2:p2+img_size, :])
+
                     batch.append(img)
 
                     label.append(labels[idx])
@@ -140,9 +156,9 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                         p1, p2 = p2, p1
                         #img2 = img
                         img = img[p1:p1 + img_size, p2:p2 + img_size, :]
-                        if (random.randint(0, 1) == 1):
+                        if (random.randint(0, 4) == 1):
                             img = np.fliplr(img)
-                        if (random.randint(0, 1) == 1):
+                        if (random.randint(0, 4) == 1):
                             img = np.flipud(img)
                         # batch.append(img[p1:p1+img_size, p2:p2+img_size, :])
                         batch.append(img)

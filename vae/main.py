@@ -46,7 +46,7 @@ class LatentAttention():
         self.c_vars = [var for var in t_vars if 'classifier_net' in var.name]
 
         self.Loss1 = tf.reduce_mean(self.generation_loss)
-        self.Loss2 = tf.reduce_mean(self.classifier_loss) + 0.01 * tf.nn.l2_loss(self.c_vars[0])
+        self.Loss2 = tf.reduce_mean(self.classifier_loss) + 0.007 * tf.nn.l2_loss(self.c_vars[0])
 
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
@@ -67,7 +67,7 @@ class LatentAttention():
             classifier_train_loss_list = []
             classifier_test_loss_list = []
             # train autoencoder
-            for step in range(int(self.num_of_steps/25)):
+            for step in range(int(0)):
                 random_batch = get_next_random_batch(self.unsupervised_imgs, self.img_size, self.batch_size)
                 _, session_generation_loss = sess.run((self.optimizer, self.generation_loss),
                                        feed_dict={self.images: random_batch,self.is_training:True})
@@ -99,6 +99,8 @@ class LatentAttention():
 
                 print("train classifier loss " + str(session_classifier_loss))
                 if step % 100 == 0:
+                    logging.info('##########################################################')
+                    logging.info('step is {d}'.format(d=step))
                     logging.info('########################TRAIN###########################')
                     real_vs_estimated_labels = [
                         (labels[i], train_label[i], int(round(abs(labels[i] - train_label[i]))))
@@ -109,11 +111,13 @@ class LatentAttention():
                     self.batch_size = 10
                     session_classifier_loss, test_label_result = sess.run((self.Loss2, tf.nn.sigmoid(self.classifier_estimated)),
                                                                        feed_dict={self.images: test_batch, self.tf_labels: test_labels, self.is_training: False})
-                    logging.info('step is {d}'.format(d=step))
+
                     logging.info('########################TEST###########################')
                     real_vs_estimated_labels = [(test_labels[i], test_label_result[i], int(round(abs(test_labels[i]-test_label_result[i])))) for i in range(self.batch_size)]
                     for tup in real_vs_estimated_labels:
                         logging.info('\t' + str(tup))
+                    logging.info('##########################################################')
+                    logging.info("test classifier loss " + str(session_classifier_loss))
                     logging.info('##########################################################')
                     print("test classifier loss " + str(session_classifier_loss))
 
