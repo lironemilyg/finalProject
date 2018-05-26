@@ -56,8 +56,8 @@ class LatentAttention():
 
 
     def train(self):
-        visu_imgs_AE = get_next_random_batch(self.unsupervised_imgs, self.img_size, 64)
-        ims('./results/base.jpg', merge(visu_imgs_AE, [8, 8]))
+        #visu_imgs_AE = get_next_random_batch(self.unsupervised_imgs, self.img_size, 64)
+        #ims('./results/base.jpg', merge(visu_imgs_AE, [8, 8]))
         # train
         saver = tf.train.Saver(max_to_keep=2)
         self.batch_size = 100
@@ -67,6 +67,7 @@ class LatentAttention():
             classifier_train_loss_list = []
             classifier_test_loss_list = []
             # train autoencoder
+            '''
             for step in range(int(self.num_of_steps/25)):
                 random_batch = get_next_random_batch(self.unsupervised_imgs, self.img_size, self.batch_size)
                 _, session_generation_loss = sess.run((self.optimizer, self.generation_loss),
@@ -82,44 +83,57 @@ class LatentAttention():
                     #     print("step %d: genloss %f" % (step, np.mean(session_generation_loss)))
                     generation_test = sess.run(self.generated_images, feed_dict={self.images: visu_imgs_AE, self.is_training: True})
                     ims("results/" + str(step) + ".jpg", merge(generation_test, [8, 8]))
-
+            '''
             # train classifier
             self.batch_size = 10
             test_batch, test_labels = get_next_random_batch_with_labels(self.test_imgs, self.test_labels, self.img_size,
                                                               self.batch_size, self.image_pixel_data,
                                                               self.test_img_files)
-            for step in range(int(self.num_of_steps/50)):
+            ims('./results/base.jpg', merge(test_batch, [5, 2]))
+            for step in range(int(self.num_of_steps)):
                 self.batch_size = 100
-                batch, labels = get_next_random_batch_with_labels(self.train_imgs, self.trian_labels, self.img_size,
-                                                                  self.batch_size, self.image_pixel_data, self.train_img_files)
-                _, session_classifier_loss,train_label = sess.run((self.optimizer2, self.Loss2,tf.nn.sigmoid(self.classifier_estimated)),
-                                                                  feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:True})
+                random_batch = get_next_random_batch(self.unsupervised_imgs, self.img_size, self.batch_size)
+                _, session_generation_loss = sess.run((self.optimizer, self.generation_loss),
+                                                      feed_dict={self.images: random_batch, self.is_training: True})
+                print(session_generation_loss)
+                if (step > 6000):
+                    batch, labels = get_next_random_batch_with_labels(self.train_imgs, self.trian_labels, self.img_size,
+                                                                      self.batch_size, self.image_pixel_data, self.train_img_files)
+                    _, session_classifier_loss,train_label = sess.run((self.optimizer2, self.Loss2,tf.nn.sigmoid(self.classifier_estimated)),
+                                                                      feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:True})
                 #_, session_classifier_loss = sess.run((self.optimizer2, self.Loss2),
                 #                                       feed_dict={self.images: batch,self.tf_labels:labels,self.is_training:False})
 
-                print("train classifier loss " + str(session_classifier_loss))
+                    print("train classifier loss " + str(session_classifier_loss))
                 if step % 100 == 0:
-                    logging.info('##########################################################')
-                    logging.info('step is {d}'.format(d=step))
-                    logging.info('########################TRAIN###########################')
-                    real_vs_estimated_labels = [
-                        (labels[i], train_label[i], int(round(abs(labels[i] - train_label[i]))))
-                        for i in range(self.batch_size)]
-                    for tup in real_vs_estimated_labels:
-                        logging.info('\t' + str(tup))
-                    logging.info('##########################################################')
+                    if(step > 6000):
+                        logging.info('##########################################################')
+                        logging.info('step is {d}'.format(d=step))
+                        logging.info('########################TRAIN###########################')
+                        real_vs_estimated_labels = [
+                            (labels[i], train_label[i], int(round(abs(labels[i] - train_label[i]))))
+                            for i in range(self.batch_size)]
+                        for tup in real_vs_estimated_labels:
+                            logging.info('\t' + str(tup))
+                        logging.info('##########################################################')
                     self.batch_size = 10
-                    session_classifier_loss, test_label_result = sess.run((self.Loss2, tf.nn.sigmoid(self.classifier_estimated)),
-                                                                       feed_dict={self.images: test_batch, self.tf_labels: test_labels, self.is_training: False})
+                    if(step>4000):
+                        session_classifier_loss, test_label_result = sess.run((self.Loss2, tf.nn.sigmoid(self.classifier_estimated)),
+                                                                           feed_dict={self.images: test_batch, self.tf_labels: test_labels, self.is_training: False})
+                        logging.info('########################TEST###########################')
+                        real_vs_estimated_labels = [(test_labels[i], test_label_result[i],
+                                                     int(round(abs(test_labels[i] - test_label_result[i])))) for i in
+                                                    range(self.batch_size)]
+                        for tup in real_vs_estimated_labels:
+                            logging.info('\t' + str(tup))
+                        logging.info('##########################################################')
+                        logging.info("test classifier loss " + str(session_classifier_loss))
+                        logging.info('##########################################################')
+                        print("test classifier loss " + str(session_classifier_loss))
 
-                    logging.info('########################TEST###########################')
-                    real_vs_estimated_labels = [(test_labels[i], test_label_result[i], int(round(abs(test_labels[i]-test_label_result[i])))) for i in range(self.batch_size)]
-                    for tup in real_vs_estimated_labels:
-                        logging.info('\t' + str(tup))
-                    logging.info('##########################################################')
-                    logging.info("test classifier loss " + str(session_classifier_loss))
-                    logging.info('##########################################################')
-                    print("test classifier loss " + str(session_classifier_loss))
+                    generation_test = sess.run(self.generated_images, feed_dict={self.images: test_batch, self.is_training: True})
+                    ims("results/" + str(step) + ".jpg", merge(generation_test, [5, 2]))
+
 
             # dumb hack to print cost every epoch
 
