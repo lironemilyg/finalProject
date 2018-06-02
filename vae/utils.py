@@ -122,8 +122,8 @@ def get_next_random_batch_with_labels(imgs, labels, img_size, batch_size, image_
                         height = image_pixel_data[image_name][2]
                         width = image_pixel_data[image_name][3]
                         scale = 1.0
-                        if(height <128 and width < 128 and random.randint(0,1) == 1):
-                            scale = random.random()*128/min(img.shape[0], img.shape[1])
+                        # if(height <128 and width < 128 and random.randint(0,1) == 1):
+                        #     scale = random.random()*128/min(img.shape[0], img.shape[1])
 
                         degree = random.randint(0, 360)
                         img = rotate(img, degree, (int(float(x)), int(float(y))), scale)
@@ -265,3 +265,24 @@ def CreateCenerMassFile(path):
 #CreateCenerMassFile(r'./dataset')
 
 
+def ROC(x):
+    from sklearn.metrics import roc_curve, auc
+    import matplotlib.pyplot as plt
+
+    pred = []
+    act = []
+    for i in x:
+        pred.append(i[0])
+        act.append(i[1])
+    fps, tps, thres = roc_curve(pred, act)
+    roc_auc = auc(fps, tps)
+    plt.title('Receiver Operating Characteristic')
+    plt.plot(fps, tps, 'b',
+             label='AUC = %0.2f' % roc_auc)
+    plt.legend(loc='lower right')
+    plt.plot([0, 1], [0, 1], 'r--')
+    plt.xlim([-0.1, 1.2])
+    plt.ylim([-0.1, 1.2])
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    plt.show()
